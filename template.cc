@@ -48,7 +48,7 @@ int main() {
     cin.tie(nullptr);
 #endif
     int T = 1;
-    // cin >> T;
+    cin >> T;
     while (T-- > 0) {
         run_case();
     }
