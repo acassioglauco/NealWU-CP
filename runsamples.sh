@@ -116,7 +116,7 @@ run_test_case() {
     local exit_status=$?
     
     # Check for timeout
-    if [ $exit_status -eq 60 ]; then
+    if [ $exit_status -eq 124 ]; then
         echo -e "\033[1;31m[TLE] Time Limit Exceeded ($TIME_LIMIT seconds)\033[0m"
         return 1
     fi
