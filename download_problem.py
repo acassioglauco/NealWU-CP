@@ -90,7 +90,10 @@ class ProblemMetadata:
             'AtCoder': r'AtCoder',
             'CodeChef': r'CodeChef',
             'SPOJ': r'SPOJ',
-            'UVA': r'UVA'
+            'UVA': r'UVA',
+            'Kattis': r'Kattis',
+            'BRSPOJ': r'BRSPOJ',
+            'VJudge': r'VJudge'
         }
 
         # Remove any leading/trailing spaces and dashes
@@ -297,4 +300,3 @@ if __name__ == '__main__':
 
 
 
-    
