@@ -78,23 +78,18 @@ compare_outputs() {
     
     local output_length=${#output_array[@]}
     local expected_length=${#expected_array[@]}
-    local min_length
     
-    if [[ $output_length -lt $expected_length ]]; then
-        min_length=$output_length
-        echo -e "\033[1;31m[ERROR] Output has fewer values ($output_length) than expected ($expected_length)\033[0m"
-    elif [[ $output_length -gt $expected_length ]]; then
-        min_length=$expected_length
-        echo -e "\033[1;31m[ERROR] Output has more values ($output_length) than expected ($expected_length)\033[0m"
-    else
-        min_length=$output_length
+    # If lengths are different, it's an immediate failure
+    if [[ $output_length -ne $expected_length ]]; then
+        echo -e "\033[1;31m[ERROR] Output has $output_length values, expected $expected_length values\033[0m"
+        return 1
     fi
     
     local differences_found=0
     
-    for ((i=0; i<min_length; i++)); do
+    for ((i=0; i<output_length; i++)); do
         if [[ "${output_array[$i]}" != "${expected_array[$i]}" ]]; then
-            echo -e "Mismatch at $((i+1))-th value: ${output_array[$i]} (run_sample_output-$testname.txt) vs ${expected_array[$i]} ($testname.out)\033[0m"
+            echo -e "\033[1;31mMismatch at $((i+1))-th value: ${output_array[$i]} (run_sample_output-$testname.txt) vs ${expected_array[$i]} ($testname.out)\033[0m"
             differences_found=1
         fi
     done
@@ -140,9 +135,10 @@ run_test_case() {
         cat "$answer_file"
         echo "------------------------------------------"
         
+        # Modify this line to return the result of compare_outputs
         if ! compare_outputs "$output_file" "$answer_file" "$testname"; then
             echo -e "\033[1;31mFailed!\n\033[0m"
-            return 1
+            return 1  # Explicitly return 1 (failure) if comparison fails
         fi
         
         echo -e "\033[1;32mPassed!\n\033[0m"
@@ -218,7 +214,6 @@ main() {
 
 # Execute main function with all arguments
 main "$@"
-
 
 
 
