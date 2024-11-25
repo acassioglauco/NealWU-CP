@@ -1,60 +1,107 @@
 #!/bin/bash
 
-# Constants
+# Enhanced Test Runner Script with Performance and Flexibility Improvements
+
+# Extended Constants
 COMPILER="g++"
-BASE_FLAGS="-std=c++20 -Wshadow -Wall -Wextra -O2 -Wno-unused-result"  # Removed -DDEBUG from here
+BASE_FLAGS="-std=c++20 -Wshadow -Wall -Wextra -O2 -Wno-unused-result"
 TIME_LIMIT=1  # Time limit in seconds
 
-# Function to display usage instructions
+# Logging Configuration
+LOG_DIR="test_logs"
+LOG_FILE="${LOG_DIR}/test_results_$(date +%Y%m%d_%H%M%S).log"
+
+# Create log directory
+mkdir -p "$LOG_DIR"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+# Enhanced Language Detection
+declare -A LANGUAGE_COMPILERS=(
+    [cc]="g++"
+    [cpp]="g++"
+    [c]="gcc"
+    [py]="python3"
+)
+
+# Advanced Time Calculation Function
+calculate_time_ms() {
+    local start_time=$1
+    local end_time=$2
+
+    local elapsed_ns=$((end_time - start_time))
+    local time_ms=$((elapsed_ns / 1000000))
+
+    echo $time_ms
+}
+
+# Usage Instructions with More Detailed Guidance
 show_usage() {
     echo "Usage: $0 <problem_name> [extra_flags]"
+    echo "Optional flags:"
+    echo "  --debug     Enable debug mode"
+    echo "  --verbose   Show additional detailed information"
     exit 1
 }
 
-# Function to check if input files exist
+# Robust Input File Detection
 check_input_files() {
     local problem=$1
     local input_files="${problem}-*.in"
-    if ! ls $input_files 1> /dev/null 2>&1; then
-        echo "[ERROR] No input files found for pattern: ${input_files}"
+    if ! compgen -G "$input_files" > /dev/null; then
+        echo -e "\033[1;31m[ERROR] No input files found for pattern: ${input_files}\033[0m"
         exit 1
     fi
 }
 
-# Function to setup compilation flags
+# Enhanced Flag Setup with More Flexibility
 setup_flags() {
     local extra_flags=$1
     local debug_mode=$2
+    local verbose_mode=$3
     local debug_flag=""
+    local verbose_flag=""
     
-    # Add -DDEBUG only if debug_mode is enabled or if command contains --debug
     if [[ $debug_mode -eq 1 ]] || [[ "$extra_flags" == *"--debug"* ]]; then
         debug_flag="-DDEBUG"
     fi
     
-    # Remove duplicate --debug from extra_flags if it exists
-    extra_flags=${extra_flags/--debug/}
+    if [[ $verbose_mode -eq 1 ]] || [[ "$extra_flags" == *"--verbose"* ]]; then
+        verbose_flag="-DVERBOSE"
+    fi
     
-    echo "${BASE_FLAGS} ${debug_flag} ${extra_flags}"
+    extra_flags=${extra_flags/--debug/}
+    extra_flags=${extra_flags/--verbose/}
+    
+    echo "${BASE_FLAGS} ${debug_flag} ${verbose_flag} ${extra_flags}"
 }
 
-# Function to compile the program
+# Smart Compiler Detection
+detect_compiler() {
+    local problem="$1"
+    local source_file=$(find . -maxdepth 1 -type f -name "${problem}.*" | head -1)
+    local ext="${source_file##*.}"
+    
+    echo "${LANGUAGE_COMPILERS[$ext]:-$COMPILER}"
+}
+
+# Compilation with Enhanced Diagnostics
 compile_program() {
     local problem=$1
     local flags=$2
     local cpp_version=$(echo "$BASE_FLAGS" | grep -oP "(?<=-std=c\+\+)[0-9]+")
+    local compiler=$(detect_compiler "$problem")
     
     echo -e "\033[1;32m[DEBUG MODE]\033[0m Compiling ${problem}.cc with c++${cpp_version}."
-    echo "[DEBUG] Executing compilation command: $COMPILER $flags ${problem}.cc -o $problem"
+    echo "[DEBUG] Executing compilation command: $compiler $flags ${problem}.cc -o $problem"
     
-    $COMPILER $flags ${problem}.cc -o $problem
+    $compiler $flags ${problem}.cc -o $problem
     if [ $? -ne 0 ]; then
-        echo "[ERROR] Failed to compile ${problem}.cc."
+        echo -e "\033[1;31m[ERROR] Failed to compile ${problem}.cc.\033[0m"
         exit 1
     fi
 }
 
-# Function to run interactive mode
+# Interactive Debugging Mode
 run_interactive() {
     local problem=$1
     echo "[DEBUG MODE] Compilation finished. Program is ready for debugging."
@@ -62,24 +109,21 @@ run_interactive() {
     ./$problem
 }
 
-# Function to compare outputs line by line
+# Advanced Output Comparison
 compare_outputs() {
     local output_file=$1
     local expected_file=$2
     local testname=$3
     
-    # Convert both files to arrays, reading word by word
     mapfile -t output_words < <(cat "$output_file" | tr -d '\r' | tr '\n' ' ' | tr -s ' ' | sed 's/ $//')
     mapfile -t expected_words < <(cat "$expected_file" | tr -d '\r' | tr '\n' ' ' | tr -s ' ' | sed 's/ $//')
     
-    # Split the strings into arrays
     IFS=' ' read -ra output_array <<< "${output_words[0]}"
     IFS=' ' read -ra expected_array <<< "${expected_words[0]}"
     
     local output_length=${#output_array[@]}
     local expected_length=${#expected_array[@]}
     
-    # If lengths are different, it's an immediate failure
     if [[ $output_length -ne $expected_length ]]; then
         echo -e "\033[1;31m[ERROR] Output has $output_length values, expected $expected_length values\033[0m"
         return 1
@@ -97,7 +141,7 @@ compare_outputs() {
     return $differences_found
 }
 
-# Function to run a single test case
+# Performance-Enhanced Test Case Runner
 run_test_case() {
     local problem=$1
     local testcase=$2
@@ -106,21 +150,28 @@ run_test_case() {
     
     echo "Running $testname:"
     
-    # Run with timeout and capture exit status
+    local start_time=$(date +%s%N)
+
     timeout $TIME_LIMIT ./$problem < $testcase > "$output_file"
     local exit_status=$?
-    
-    # Check for timeout
+
+    local end_time=$(date +%s%N)
+
     if [ $exit_status -eq 124 ]; then
         echo -e "\033[1;31m[TLE] Time Limit Exceeded ($TIME_LIMIT seconds)\033[0m"
         return 1
     fi
     
-    # Get memory and time usage
-    /usr/bin/time -f "Memory: %M KB\nTime: %es" -o "${testname}.time" ./$problem < $testcase > /dev/null 2>&1
-    cat "${testname}.time"
-    
-    # Try both .ans and .out extensions
+    local time_ms=$(calculate_time_ms $start_time $end_time)
+    local time_sec=$(echo "scale=2; $time_ms / 1000" | bc)
+
+    local memory_output
+    memory_output=$( ( /usr/bin/time -f "%M" ./$problem < $testcase > /dev/null ) 2>&1 )
+    local memory=$memory_output
+
+    echo "Memory: ${memory} KB"
+    echo "Time: ${time_sec}s (${time_ms}ms)"
+
     local answer_file="${testname}.ans"
     if [[ ! -f $answer_file ]]; then
         answer_file="${testname}.out"
@@ -135,10 +186,9 @@ run_test_case() {
         cat "$answer_file"
         echo "------------------------------------------"
         
-        # Modify this line to return the result of compare_outputs
         if ! compare_outputs "$output_file" "$answer_file" "$testname"; then
             echo -e "\033[1;31mFailed!\n\033[0m"
-            return 1  # Explicitly return 1 (failure) if comparison fails
+            return 1
         fi
         
         echo -e "\033[1;32mPassed!\n\033[0m"
@@ -149,21 +199,20 @@ run_test_case() {
     fi
 }
 
-# Function to display final results
+# Enhanced Results Presentation
 show_results() {
     local passed=$1
     local total=$2
     
     if [[ $total -eq 0 ]]; then
-        echo "[ERROR] No valid test cases were found."
+        echo -e "\033[1;31m[ERROR] No valid test cases were found.\033[0m"
     else
         echo -e "\033[1;32m$passed / $total tests passed!\n\033[0m"
     fi
 }
 
-# Main execution
+# Main Execution with Improved Flexibility
 main() {
-    # Check if problem name is provided
     if [ $# -lt 1 ]; then
         show_usage
     fi
@@ -171,30 +220,30 @@ main() {
     local problem=$1
     local extra_flags=${2:-}
     local INTERACTIVE_MODE=0
+    local VERBOSE_MODE=0
     
-    # Check debug mode
     if [[ "$@" == *"--debug"* ]]; then
         INTERACTIVE_MODE=1
         echo "[DEBUG MODE] Debugging enabled!"
     fi
     
-    # Check for input files
+    if [[ "$@" == *"--verbose"* ]]; then
+        VERBOSE_MODE=1
+        echo "[VERBOSE MODE] Additional information enabled!"
+    fi
+    
     check_input_files "$problem"
     
-    # Setup and display compilation flags
-    local FLAGS=$(setup_flags "$extra_flags" $INTERACTIVE_MODE)
+    local FLAGS=$(setup_flags "$extra_flags" $INTERACTIVE_MODE $VERBOSE_MODE)
     echo "[DEBUG] Compilation flags: '$FLAGS'"
     
-    # Compile the program
     compile_program "$problem" "$FLAGS"
     
-    # Run in interactive mode if requested
     if [ $INTERACTIVE_MODE -eq 1 ]; then
         run_interactive "$problem"
         exit 0
     fi
     
-    # Run test cases
     local passed=0
     local total=0
     
@@ -205,15 +254,16 @@ main() {
         fi
     done
     
-    # Show results
     show_results $passed $total
     
-    # Cleanup
     rm -f $problem run_sample_output-${problem}-*.txt ${problem}-*.time
 }
 
 # Execute main function with all arguments
 main "$@"
+
+
+
 
 
 
