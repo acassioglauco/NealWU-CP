@@ -112,7 +112,7 @@ class ProblemHandler:
     
     def __init__(self, base_dir: Path = Path('.')):
         self.base_dir = base_dir
-        self.created_files = 0
+        self.created_files = []  # Changed to list to track individual files
         self.failed_files = []
 
     def generate_file_header(self, metadata: ProblemMetadata) -> str:
@@ -135,9 +135,12 @@ class ProblemHandler:
             prob_dir = self.base_dir / metadata.group / metadata.name
             prob_dir.mkdir(parents=True, exist_ok=True)
             
-            # Count directories created
+            # Track created directories
+            for parent in prob_dir.parents:
+                if not parent.exists():
+                    self.created_files.append(str(parent))
             if not prob_dir.exists():
-                self.created_files += len(list(prob_dir.parents)) + 1
+                self.created_files.append(str(prob_dir))
             
             # Create source file
             if manual_mode:
@@ -152,14 +155,15 @@ class ProblemHandler:
                     content = f.read()
                     f.seek(0)
                     f.write(self.generate_file_header(metadata) + content)
-                print(Colors.success(f"Created problem {metadata.name}..."))
-                self.created_files += 1
-            else:
-                print(Colors.warning(f"Problem {metadata.name} already exists..."))
+                self.created_files.append(str(source_file))
 
             # Create test cases
             problem_name = metadata.name.split()[0].split('.')[0]
             self._save_test_cases(prob_dir, metadata.tests, problem_name)
+            
+            # Print creation messages for each file
+            for file_path in self.created_files:
+                print(Colors.success(f"create mode 100644 {file_path}"))
             
         except Exception as e:
             print(Colors.error(f"Failed to make problem {metadata.name}"))
@@ -173,21 +177,22 @@ class ProblemHandler:
             if not in_file.exists():
                 with open(in_file, 'w') as f:
                     f.write(test['input'])
-                self.created_files += 1
+                self.created_files.append(str(in_file))
 
             # Create output file
             out_file = prob_dir / f'{problem_name}-{i}.out'
             if not out_file.exists():
                 with open(out_file, 'w') as f:
                     f.write(test['output'])
-                self.created_files += 1
+                self.created_files.append(str(out_file))
 
     def print_summary(self):
         """Print summary of files created and any failures"""
-        print(Colors.success(f"\nTotal of files created (including .cc, .in, .out, and directories): {self.created_files}"))
+        print(Colors.success(f"\nTotal files created: {len(self.created_files)}"))
         if self.failed_files:
             for name in self.failed_files:
                 print(Colors.error(f"Failed to make problem {name}"))
+
 
 class CompetitiveCompanionServer:
     """Server to receive problems from Competitive Companion"""
@@ -295,5 +300,4 @@ if __name__ == '__main__':
     
     
     
-
-
+        
