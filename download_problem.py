@@ -115,7 +115,7 @@ class ProblemHandler:
     
     def __init__(self, base_dir: Path = Path('.')):
         self.base_dir = base_dir
-        self.created_files = 0
+        self.created_files = []  # Changed to list to track individual files
         self.failed_files = []
 
     def generate_file_header(self, metadata: ProblemMetadata) -> str:
@@ -134,18 +134,21 @@ class ProblemHandler:
     def create_problem_files(self, metadata: ProblemMetadata, manual_mode: bool = False) -> None:
         """Create all necessary problem files"""
         try:
-            # Create problem directory structure (only contest folder)
+            # Create contest directory
             contest_dir = self.base_dir / metadata.group
             contest_dir.mkdir(parents=True, exist_ok=True)
             
-            # Count directories created
+            # Track created directories
             if not contest_dir.exists():
-                self.created_files += len(list(contest_dir.parents)) + 1
+                for parent in contest_dir.parents:
+                    if not parent.exists():
+                        self.created_files.append(str(parent))
+                self.created_files.append(str(contest_dir))
             
             # Extract problem letter/number from the name
             problem_id = metadata.name.split()[0].split('.')[0]
             
-            # Create source file directly in the contest directory
+            # Create source file
             if manual_mode:
                 source_file = contest_dir / 'sol.cc'
             else:
@@ -158,12 +161,10 @@ class ProblemHandler:
                     content = f.read()
                     f.seek(0)
                     f.write(self.generate_file_header(metadata) + content)
-                print(Colors.success(f"Created problem {metadata.name}..."))
-                self.created_files += 1
-            else:
-                print(Colors.warning(f"Problem {metadata.name} already exists..."))
+                self.created_files.append(str(source_file))
+                print(Colors.success(f"Create mode {source_file}"))
 
-            # Create test cases directly in the contest directory
+            # Create test cases
             self._save_test_cases(contest_dir, metadata.tests, problem_id)
             
         except Exception as e:
@@ -178,21 +179,24 @@ class ProblemHandler:
             if not in_file.exists():
                 with open(in_file, 'w') as f:
                     f.write(test['input'])
-                self.created_files += 1
+                self.created_files.append(str(in_file))
+                print(Colors.success(f"create mode 100644 {in_file}"))
 
             # Create output file
             out_file = contest_dir / f'{problem_id}-{i}.out'
             if not out_file.exists():
                 with open(out_file, 'w') as f:
                     f.write(test['output'])
-                self.created_files += 1
+                self.created_files.append(str(out_file))
+                print(Colors.success(f"create mode 100644 {out_file}"))
 
     def print_summary(self):
         """Print summary of files created and any failures"""
-        print(Colors.success(f"\nTotal of files created (including .cc, .in, .out, and directories): {self.created_files}"))
+        print(Colors.success(f"\nTotal files created: {len(self.created_files)}"))
         if self.failed_files:
             for name in self.failed_files:
                 print(Colors.error(f"Failed to make problem {name}"))
+
 
 class CompetitiveCompanionServer:
     """Server to receive problems from Competitive Companion"""
