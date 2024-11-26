@@ -165,6 +165,17 @@ class ProblemHandler:
             problem_name = metadata.name.split()[0].split('.')[0]
             self._save_test_cases(prob_dir, metadata.tests, problem_name)
             
+            # Copy gen_cf.py to the problem directory
+            gen_cf_source = '/home/parallels/Sublime/gen_cf.py'
+            gen_cf_dest = prob_dir / 'gen_cf.py'
+            
+            if os.path.exists(gen_cf_source):
+                shutil.copyfile(gen_cf_source, gen_cf_dest)
+                self.created_files.append(str(gen_cf_dest))
+                print(Colors.success(f"Copied generator script {gen_cf_source} to {gen_cf_dest}"))
+            else:
+                print(Colors.warning(f"Generator script {gen_cf_source} not found"))
+            
             # Open the problem directory in Sublime
             self.open_in_sublime(prob_dir)
             
@@ -173,7 +184,7 @@ class ProblemHandler:
                 print(Colors.success(f"Created file {file_path}"))
             
         except Exception as e:
-            print(Colors.error(f"Failed to make problem {metadata.name}"))
+            print(Colors.error(f"Failed to make problem {metadata.name}: {e}"))
             self.failed_files.append(metadata.name)
 
     def _save_test_cases(self, prob_dir: Path, tests: List[Dict[str, str]], problem_name: str) -> None:
@@ -361,4 +372,8 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
+
 
