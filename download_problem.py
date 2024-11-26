@@ -167,6 +167,9 @@ class ProblemHandler:
             # Create test cases
             self._save_test_cases(contest_dir, metadata.tests, problem_id)
             
+            # Abrir arquivos e pasta no Sublime
+            self.open_in_sublime(contest_dir)
+            
         except Exception as e:
             print(Colors.error(f"Failed to make problem {metadata.name}"))
             self.failed_files.append(metadata.name)
@@ -189,6 +192,26 @@ class ProblemHandler:
                     f.write(test['output'])
                 self.created_files.append(str(out_file))
                 print(Colors.success(f"create mode 100644 {out_file}"))
+
+    def open_in_sublime(self, directory: Path):
+        """Open the created problem directory in Sublime Text"""
+        try:
+            # Listar arquivos .cc no diretório e ordenar
+            cc_files = sorted(
+                list(directory.rglob('*.cc')), 
+                key=lambda f: f.name  # Ordena pelo nome do arquivo
+            )
+            
+            # Comando para abrir Sublime com a pasta do contest
+            # e adicionar todos os arquivos .cc em abas
+            if cc_files:
+                subprocess.run(['subl', '-a', str(directory)] + [str(f) for f in cc_files], check=True)
+            else:
+                print(Colors.warning(f"Nenhum arquivo .cc encontrado no diretório {directory}"))
+        except subprocess.CalledProcessError as e:
+            print(f"Erro ao executar comando Sublime: {e}")
+        except Exception as e:
+            print(f"Erro desconhecido ao abrir Sublime: {e}")
 
     def print_summary(self):
         """Print summary of files created and any failures"""
