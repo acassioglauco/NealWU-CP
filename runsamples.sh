@@ -8,12 +8,12 @@ BASE_FLAGS="-std=c++20 -Wshadow -Wall -Wextra -O2 -Wno-unused-result"
 TIME_LIMIT=1  # Time limit in seconds
 
 # Logging Configuration
-LOG_DIR="test_logs"
-LOG_FILE="${LOG_DIR}/test_results_$(date +%Y%m%d_%H%M%S).log"
+#LOG_DIR="test_logs"
+#LOG_FILE="${LOG_DIR}/test_results_$(date +%Y%m%d_%H%M%S).log"
 
 # Create log directory
-mkdir -p "$LOG_DIR"
-exec > >(tee -a "$LOG_FILE") 2>&1
+#mkdir -p "$LOG_DIR"
+#exec > >(tee -a "$LOG_FILE") 2>&1
 
 # Enhanced Language Detection
 declare -A LANGUAGE_COMPILERS=(
@@ -163,7 +163,7 @@ run_test_case() {
     fi
     
     local time_ms=$(calculate_time_ms $start_time $end_time)
-    local time_sec=$(echo "scale=2; $time_ms / 1000" | bc)
+    local time_sec=$(printf "%.2f" $(echo "scale=2; $time_ms / 1000" | bc))
 
     local memory_output
     memory_output=$( ( /usr/bin/time -f "%M" ./$problem < $testcase > /dev/null ) 2>&1 )
