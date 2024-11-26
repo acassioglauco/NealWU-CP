@@ -196,18 +196,18 @@ class ProblemHandler:
     def open_in_sublime(self, directory: Path):
         """Open the created problem directory in Sublime Text"""
         try:
-            # Verificação de depuração
-            print(f"Tentando abrir diretório: {directory}")
-            print(f"Diretório existe: {directory.exists()}")
+            # Encontrar o diretório do Round (um nível acima)
+            round_dir = directory.parent
             
-            # Listar arquivos .cc no diretório
-            cc_files = list(directory.rglob('*.cc'))
-            print(f"Arquivos .cc encontrados: {cc_files}")
+            # Listar arquivos .cc no diretório atual, ordenados alfabeticamente
+            cc_files = sorted(
+                list(directory.rglob('*.cc')), 
+                key=lambda f: f.name  # Ordena pelo nome do arquivo
+            )
             
-            # Comando para abrir Sublime com todos os arquivos .cc em abas diferentes
+            # Comando para abrir Sublime com o diretório do Round e os arquivos em ordem alfabética
             if cc_files:
-                print("Abrindo arquivos .cc...")
-                subprocess.run(['subl'] + [str(f) for f in cc_files], check=True)
+                subprocess.run(['subl', '-a', str(round_dir)] + [str(f) for f in cc_files], check=True)
             else:
                 print(Colors.warning(f"Nenhum arquivo .cc encontrado no diretório {directory}"))
 
@@ -215,10 +215,6 @@ class ProblemHandler:
             print(f"Erro ao executar comando Sublime: {e}")
         except Exception as e:
             print(f"Erro desconhecido ao abrir Sublime: {e}")
-            # Imprimir informações de sistema para debug
-            import sys
-            print(f"Sistema operacional: {platform.system()}")
-            print(f"Versão do Python: {sys.version}")
 
     def print_summary(self):
         """Print summary of files created and any failures"""
@@ -330,5 +326,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
 
