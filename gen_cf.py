@@ -63,17 +63,17 @@ class TestCaseGenerator:
         Find the next available test case number
         
         Returns:
-            int: Next available test case number
+            int: Next available test case number, starting from 2
         """
         existing_files = os.listdir(self.base_dir)
         test_files = [f for f in existing_files if f.startswith(f"{self.problem_letter}-") and f.endswith('.in')]
         
         if not test_files:
-            return 1
+            return 2  # Start from 2 instead of 1
         
         # Extract numbers from existing test files and find the max
         existing_numbers = [int(re.search(r'-(\d+)\.in$', f).group(1)) for f in test_files if re.search(r'-(\d+)\.in$', f)]
-        return max(existing_numbers) + 1
+        return max(existing_numbers) + 1 if existing_numbers else 2
 
     def generate_test_case(self, input_content: Union[str, List[Union[str, int, float]]], 
                             output_content: Union[str, List[Union[str, int, float]]] = None) -> Tuple[str, str]:
@@ -207,4 +207,3 @@ if __name__ == '__main__':
 
 
 
-    
