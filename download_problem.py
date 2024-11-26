@@ -220,7 +220,6 @@ class ProblemHandler:
             for name in self.failed_files:
                 print(Colors.error(f"Failed to make problem {name}"))
 
-
 class CompetitiveCompanionServer:
     """Server to receive problems from Competitive Companion"""
     
@@ -279,8 +278,43 @@ class CompetitiveCompanionServer:
         
         return results
 
+def print_initial_instructions():
+    """Print instructions for using Competitive Companion"""
+    instructions = f"""{Colors.HEADER}🏁 Competitive Companion Problem Downloader 🏁{Colors.END}
+
+{Colors.OKBLUE}SETUP INSTRUCTIONS:{Colors.END}
+
+1. {Colors.OKGREEN}Install Competitive Companion Browser Extension{Colors.END}
+   - Available for Chrome and Firefox
+   - Search "Competitive Companion" in your browser's extension store
+
+2. {Colors.OKGREEN}Configure Extension Port{Colors.END}
+   - Open Competitive Companion extension settings
+   - Set Local Port to: {Colors.WARNING}10046{Colors.END}
+
+3. {Colors.OKGREEN}Workflow{Colors.END}
+   - Start this script
+   - Go to an online judge (Codeforces, AtCoder, etc.)
+   - Open a problem page
+   - Click Competitive Companion extension icon
+
+{Colors.HEADER}USAGE EXAMPLES:{Colors.END}
+   {Colors.OKBLUE}• Download 1 problem:     {Colors.END}python3 download_prob.py
+   {Colors.OKBLUE}• Download 3 problems:    {Colors.END}python3 download_prob.py -n 3
+   {Colors.OKBLUE}• Download 2 batches:     {Colors.END}python3 download_prob.py -b 2
+   {Colors.OKBLUE}• Dry run (preview only): {Colors.END}python3 download_prob.py --dryrun
+
+{Colors.WARNING}Waiting for Competitive Companion problem...{Colors.END}
+"""
+    print(instructions)
+
 def main():
     arguments = docopt(__doc__)
+    
+    # If no specific arguments are provided, show instructions
+    if all(not arguments[key] for key in ['--echo', '<name>', '--number', '--batches', '--timeout']):
+        print_initial_instructions()
+    
     server = CompetitiveCompanionServer()
     handler = ProblemHandler()
 
@@ -327,3 +361,5 @@ if __name__ == '__main__':
 
 
 
+
+    
