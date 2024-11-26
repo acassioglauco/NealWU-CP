@@ -133,7 +133,7 @@ compare_outputs() {
     
     for ((i=0; i<output_length; i++)); do
         if [[ "${output_array[$i]}" != "${expected_array[$i]}" ]]; then
-            echo -e "\033[1;31mMismatch at $((i+1))-th value: ${output_array[$i]} (run_sample_output-$testname.txt) vs ${expected_array[$i]} ($testname.out)\033[0m"
+            echo -e "Mismatch at $((i+1))-th value: ${output_array[$i]} (run_sample_output-$testname.txt) vs ${expected_array[$i]} ($testname.out)"
             differences_found=1
         fi
     done
