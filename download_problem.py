@@ -164,6 +164,17 @@ class ProblemHandler:
                 self.created_files.append(str(source_file))
                 print(Colors.success(f"Create mode {source_file}"))
 
+            # Copy gen_cf.py to the contest directory
+            gen_cf_source = Path('/home/parallels/Sublime/gen_cf.py')
+            gen_cf_dest = contest_dir / 'gen_cf.py'
+            
+            if gen_cf_source.exists():
+                shutil.copyfile(gen_cf_source, gen_cf_dest)
+                self.created_files.append(str(gen_cf_dest))
+                print(Colors.success(f"Create mode {gen_cf_dest}"))
+            else:
+                print(Colors.warning(f"gen_cf.py not found at {gen_cf_source}"))
+
             # Create test cases
             self._save_test_cases(contest_dir, metadata.tests, problem_id)
             
@@ -171,7 +182,7 @@ class ProblemHandler:
             self.open_in_sublime(contest_dir)
             
         except Exception as e:
-            print(Colors.error(f"Failed to make problem {metadata.name}"))
+            print(Colors.error(f"Failed to make problem {metadata.name}: {e}"))
             self.failed_files.append(metadata.name)
 
     def _save_test_cases(self, contest_dir: Path, tests: List[Dict[str, str]], problem_id: str) -> None:
@@ -362,4 +373,7 @@ if __name__ == '__main__':
 
 
 
-    
+
+
+
+
