@@ -27,6 +27,7 @@ import subprocess
 import re
 import os
 import shutil
+import platform
 
 class Colors:
     """ANSI color codes for terminal output"""
@@ -90,7 +91,10 @@ class ProblemMetadata:
             'AtCoder': r'AtCoder',
             'CodeChef': r'CodeChef',
             'SPOJ': r'SPOJ',
-            'UVA': r'UVA'
+            'UVA': r'UVA',
+            'Kattis' : r'Kattis',
+            'BRSPOJ' : r'BRSPOJ',
+            'VJUDGE' : r'VJUDGE'
         }
 
         # Remove any leading/trailing spaces and dashes
@@ -161,9 +165,12 @@ class ProblemHandler:
             problem_name = metadata.name.split()[0].split('.')[0]
             self._save_test_cases(prob_dir, metadata.tests, problem_name)
             
+            # Open the problem directory in Sublime
+            self.open_in_sublime(prob_dir)
+            
             # Print creation messages for each file
             for file_path in self.created_files:
-                print(Colors.success(f"create mode 100644 {file_path}"))
+                print(Colors.success(f"Created file {file_path}"))
             
         except Exception as e:
             print(Colors.error(f"Failed to make problem {metadata.name}"))
@@ -186,13 +193,39 @@ class ProblemHandler:
                     f.write(test['output'])
                 self.created_files.append(str(out_file))
 
+    def open_in_sublime(self, directory: Path):
+        """Open the created problem directory in Sublime Text"""
+        try:
+            # Verificação de depuração
+            print(f"Tentando abrir diretório: {directory}")
+            print(f"Diretório existe: {directory.exists()}")
+            
+            # Listar arquivos .cc no diretório
+            cc_files = list(directory.rglob('*.cc'))
+            print(f"Arquivos .cc encontrados: {cc_files}")
+            
+            # Comando para abrir Sublime com todos os arquivos .cc em abas diferentes
+            if cc_files:
+                print("Abrindo arquivos .cc...")
+                subprocess.run(['subl'] + [str(f) for f in cc_files], check=True)
+            else:
+                print(Colors.warning(f"Nenhum arquivo .cc encontrado no diretório {directory}"))
+
+        except subprocess.CalledProcessError as e:
+            print(f"Erro ao executar comando Sublime: {e}")
+        except Exception as e:
+            print(f"Erro desconhecido ao abrir Sublime: {e}")
+            # Imprimir informações de sistema para debug
+            import sys
+            print(f"Sistema operacional: {platform.system()}")
+            print(f"Versão do Python: {sys.version}")
+
     def print_summary(self):
         """Print summary of files created and any failures"""
         print(Colors.success(f"\nTotal files created: {len(self.created_files)}"))
         if self.failed_files:
             for name in self.failed_files:
                 print(Colors.error(f"Failed to make problem {name}"))
-
 
 class CompetitiveCompanionServer:
     """Server to receive problems from Competitive Companion"""
@@ -297,7 +330,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
-    
-    
-        
+
+
