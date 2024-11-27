@@ -2,7 +2,7 @@
 
 import os
 import re
-from typing import Union, List, Tuple
+from typing import Union, List
 
 class Colors:
     """ANSI color codes for terminal output"""
@@ -12,8 +12,6 @@ class Colors:
     WARNING = '\033[93m'
     FAIL = '\033[91m'
     END = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
     @staticmethod
     def style(text: str, *styles: str) -> str:
@@ -41,87 +39,52 @@ class TestCaseGenerator:
             problem_letter (str): The letter or identifier for the problem
         """
         self.problem_letter = problem_letter
-        self.base_dir = self._ensure_problem_directory()
-
-    def _ensure_problem_directory(self) -> str:
-        """
-        Ensure the problem directory exists and return its path
-        
-        Returns:
-            str: Path to the problem directory
-        """
-        problem_dir = os.path.join(os.getcwd(), self.problem_letter)
-        
-        if not os.path.exists(problem_dir):
-            os.makedirs(problem_dir)
-            print(Colors.success(f"Created directory: {problem_dir}"))
-        
-        return problem_dir
 
     def _get_next_test_case_number(self) -> int:
         """
-        Find the next available test case number
+        Calculate the next available test case number
         
         Returns:
             int: Next available test case number, starting from 2
         """
-        existing_files = os.listdir(self.base_dir)
-        test_files = [f for f in existing_files if f.startswith(f"{self.problem_letter}-") and f.endswith('.in')]
-        
-        if not test_files:
-            return 2  # Start from 2 instead of 1
-        
-        # Extract numbers from existing test files and find the max
-        existing_numbers = [int(re.search(r'-(\d+)\.in$', f).group(1)) for f in test_files if re.search(r'-(\d+)\.in$', f)]
-        return max(existing_numbers) + 1 if existing_numbers else 2
+        existing_files = os.listdir('.')
+        test_case_numbers = [
+            int(re.search(r'-(\d+)\.in$', f).group(1))
+            for f in existing_files
+            if re.match(rf'^{self.problem_letter}-\d+\.in$', f)
+        ]
+        return max(test_case_numbers, default=1) + 1
 
-    def generate_test_case(self, input_content: Union[str, List[Union[str, int, float]]], 
-                            output_content: Union[str, List[Union[str, int, float]]] = None) -> Tuple[str, str]:
+    def generate_test_case(self, input_content: Union[str, List], output_content: Union[str, List] = None):
         """
         Generate input and output test case files
         
         Args:
-            input_content (Union[str, List]): Content to write in the input test case file
-            output_content (Union[str, List], optional): Content to write in the output test case file
-        
-        Returns:
-            Tuple[str, str]: Paths to the generated input and output test case files
+            input_content (Union[str, List]): Content for input test case
+            output_content (Union[str, List], optional): Content for output test case
         """
-        # Get the next test case number
+        # Get next test case number
         test_case_number = self._get_next_test_case_number()
+
+        # Create input filename and write input content
+        input_filename = f"{self.problem_letter}-{test_case_number}.in"
+        input_text = input_content if isinstance(input_content, str) else '\n'.join(map(str, input_content))
         
-        # Create input filename
-        input_filename = os.path.join(self.base_dir, f"{self.problem_letter}-{test_case_number}.in")
-        
-        # Convert input content to string if it's a list
-        if isinstance(input_content, list):
-            input_content = '\n'.join(map(str, input_content))
-        
-        # Write input content to file
         with open(input_filename, 'w') as f:
-            f.write(input_content.strip() + '\n')
-        
-        print(Colors.success(f"Created input test case: {input_filename}"))
-        
-        # Handle output file if content is provided
-        output_filename = None
+            f.write(input_text.strip() + '\n')
+        print(Colors.success(f"Created input file: {input_filename}"))
+
+        # Create output file if output content is provided
         if output_content is not None:
-            output_filename = os.path.join(self.base_dir, f"{self.problem_letter}-{test_case_number}.out")
+            output_filename = f"{self.problem_letter}-{test_case_number}.out"
+            output_text = output_content if isinstance(output_content, str) else '\n'.join(map(str, output_content))
             
-            # Convert output content to string if it's a list
-            if isinstance(output_content, list):
-                output_content = '\n'.join(map(str, output_content))
-            
-            # Write output content to file
             with open(output_filename, 'w') as f:
-                f.write(output_content.strip() + '\n')
-            
-            print(Colors.success(f"Created output test case: {output_filename}"))
-        
-        return input_filename, output_filename
+                f.write(output_text.strip() + '\n')
+            print(Colors.success(f"Created output file: {output_filename}"))
 
 def main():
-    print(Colors.HEADER + "🧪 Test Case Generator 🧪" + Colors.END)
+    print(Colors.HEADER + " Test Case Generator " + Colors.END)
     
     # Get problem letter
     while True:
@@ -207,3 +170,6 @@ if __name__ == '__main__':
 
 
 
+
+
+    
