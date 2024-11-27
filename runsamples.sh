@@ -92,7 +92,7 @@ compile_program() {
     local compiler=$(detect_compiler "$problem")
     
     echo -e "\033[1;32m[DEBUG MODE]\033[0m Compiling ${problem}.cc with c++${cpp_version}."
-    echo "[DEBUG] Executing compilation command: $compiler $flags ${problem}.cc -o $problem"
+    #echo "[DEBUG] Executing compilation command: $compiler $flags ${problem}.cc -o $problem"
     
     $compiler $flags ${problem}.cc -o $problem
     if [ $? -ne 0 ]; then
@@ -162,12 +162,12 @@ run_test_case() {
         return 1
     fi
     
-    local time_ms=$(calculate_time_ms $start_time $end_time)
-    local time_sec=$(printf "%.2f" $(echo "scale=2; $time_ms / 1000" | bc))
-
     local memory_output
     memory_output=$( ( /usr/bin/time -f "%M" ./$problem < $testcase > /dev/null ) 2>&1 )
     local memory=$memory_output
+
+    local time_ms=$(calculate_time_ms $start_time $end_time)
+    local time_sec=$(printf "%.3f" $(echo "scale=3; $time_ms / 1000" | bc))    
 
     echo "Memory: ${memory} KB"
     echo "Time: ${time_sec}s (${time_ms}ms)"
@@ -224,7 +224,7 @@ main() {
     
     if [[ "$@" == *"--debug"* ]]; then
         INTERACTIVE_MODE=1
-        echo "[DEBUG MODE] Debugging enabled!"
+        #echo "[DEBUG MODE] Debugging enabled!"
     fi
     
     if [[ "$@" == *"--verbose"* ]]; then
@@ -235,7 +235,7 @@ main() {
     check_input_files "$problem"
     
     local FLAGS=$(setup_flags "$extra_flags" $INTERACTIVE_MODE $VERBOSE_MODE)
-    echo "[DEBUG] Compilation flags: '$FLAGS'"
+    #echo "[DEBUG] Compilation flags: '$FLAGS'"
     
     compile_program "$problem" "$FLAGS"
     
