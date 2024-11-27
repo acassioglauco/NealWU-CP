@@ -171,7 +171,7 @@ class ProblemHandler:
             if gen_cf_source.exists():
                 shutil.copyfile(gen_cf_source, gen_cf_dest)
                 self.created_files.append(str(gen_cf_dest))
-                print(Colors.success(f"Create mode {gen_cf_dest}"))
+                #print(Colors.success(f"Create mode {gen_cf_dest}"))
             else:
                 print(Colors.warning(f"gen_cf.py not found at {gen_cf_source}"))
 
@@ -194,7 +194,7 @@ class ProblemHandler:
                 with open(in_file, 'w') as f:
                     f.write(test['input'])
                 self.created_files.append(str(in_file))
-                print(Colors.success(f"create mode 100644 {in_file}"))
+                print(Colors.success(f"Create input file: {in_file}"))
 
             # Create output file
             out_file = contest_dir / f'{problem_id}-{i}.out'
@@ -202,7 +202,7 @@ class ProblemHandler:
                 with open(out_file, 'w') as f:
                     f.write(test['output'])
                 self.created_files.append(str(out_file))
-                print(Colors.success(f"create mode 100644 {out_file}"))
+                print(Colors.success(f"Create output file: {out_file}"))
 
     def open_in_sublime(self, directory: Path):
         """Open the created problem directory in Sublime Text"""
@@ -218,11 +218,11 @@ class ProblemHandler:
             if cc_files:
                 subprocess.run(['subl', '-a', str(directory)] + [str(f) for f in cc_files], check=True)
             else:
-                print(Colors.warning(f"Nenhum arquivo .cc encontrado no diretório {directory}"))
+                print(Colors.warning(f"No .cc file found in the directory {directory}"))
         except subprocess.CalledProcessError as e:
-            print(f"Erro ao executar comando Sublime: {e}")
+            print(f"Error while executing Sublime command: {e}")
         except Exception as e:
-            print(f"Erro desconhecido ao abrir Sublime: {e}")
+            print(f"Unknown error while opening Sublime: {e}")
 
     def print_summary(self):
         """Print summary of files created and any failures"""
@@ -369,11 +369,6 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
 
 
 
