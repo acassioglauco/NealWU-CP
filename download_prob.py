@@ -172,7 +172,7 @@ class ProblemHandler:
             if os.path.exists(gen_cf_source):
                 shutil.copyfile(gen_cf_source, gen_cf_dest)
                 self.created_files.append(str(gen_cf_dest))
-                print(Colors.success(f"Copied generator script {gen_cf_source} to {gen_cf_dest}"))
+                #print(Colors.success(f"Copied generator script {gen_cf_source} to {gen_cf_dest}"))
             else:
                 print(Colors.warning(f"Generator script {gen_cf_source} not found"))
             
@@ -220,12 +220,12 @@ class ProblemHandler:
             if cc_files:
                 subprocess.run(['subl', '-a', str(round_dir)] + [str(f) for f in cc_files], check=True)
             else:
-                print(Colors.warning(f"Nenhum arquivo .cc encontrado no diretório {directory}"))
+                print(Colors.warning(f"No .cc file found in the directory {directory}"))
 
         except subprocess.CalledProcessError as e:
-            print(f"Erro ao executar comando Sublime: {e}")
+            print(f"Error while executing Sublime command: {e}")
         except Exception as e:
-            print(f"Erro desconhecido ao abrir Sublime: {e}")
+            print(f"Unknown error while opening Sublime: {e}")
 
     def print_summary(self):
         """Print summary of files created and any failures"""
