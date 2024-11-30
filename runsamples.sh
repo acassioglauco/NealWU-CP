@@ -104,8 +104,8 @@ compile_program() {
 # Interactive Debugging Mode
 run_interactive() {
     local problem=$1
-    echo "[DEBUG MODE] Compilation finished. Program is ready for debugging."
-    echo "Type the problem input and press Enter to continue..."
+    #echo "[DEBUG MODE] Compilation finished. Program is ready for debugging."
+    #echo "Type the problem input and press Enter to continue..."
     ./$problem
 }
 
@@ -221,10 +221,16 @@ main() {
     local extra_flags=${2:-}
     local INTERACTIVE_MODE=0
     local VERBOSE_MODE=0
+    local DEBUG_MODE=0
+    
+    # Verifica se foi chamado via dbrun (com flag especial)
+    if [[ "$0" == *"dbrun"* ]]; then
+        DEBUG_MODE=1
+        INTERACTIVE_MODE=1
+    fi
     
     if [[ "$@" == *"--debug"* ]]; then
         INTERACTIVE_MODE=1
-        #echo "[DEBUG MODE] Debugging enabled!"
     fi
     
     if [[ "$@" == *"--verbose"* ]]; then
@@ -234,13 +240,14 @@ main() {
     
     check_input_files "$problem"
     
-    local FLAGS=$(setup_flags "$extra_flags" $INTERACTIVE_MODE $VERBOSE_MODE)
-    #echo "[DEBUG] Compilation flags: '$FLAGS'"
+    local FLAGS=$(setup_flags "$extra_flags" $DEBUG_MODE $VERBOSE_MODE)
     
     compile_program "$problem" "$FLAGS"
     
+    # Modo interativo para dbrun
     if [ $INTERACTIVE_MODE -eq 1 ]; then
-        run_interactive "$problem"
+        #echo "[DEBUG MODE] Enter input for the problem:"
+        ./$problem
         exit 0
     fi
     
@@ -261,8 +268,6 @@ main() {
 
 # Execute main function with all arguments
 main "$@"
-
-
 
 
 
